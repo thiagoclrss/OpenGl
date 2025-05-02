@@ -1,25 +1,19 @@
-#include <GL/freeglut_std.h>
-#include <GL/gl.h>
 #include <GL/glew.h>
+#include <GL/freeglut_std.h>
 #include <GL/freeglut.h>
+#include <GL/gl.h>
 #include <cstdio>
-#include <iostream>
 #include "math_3d.h"
 
 GLuint VBO;
 
-static void RenderSceneCB()
-{
-    static GLclampf c = 0.0f;
-    glClearColor(c,c,c,c);
-    printf("%f\n",c);
-    c += 1.0f/256.0f;
-
-    if(c >= 1.0f){
-        c = 0.0f;
-    }
+static void RenderSceneCB(){
     glClear(GL_COLOR_BUFFER_BIT);
-    glutPostRedisplay();
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glDrawArrays(GL_POINTS, 0, 1);
+    glDisableVertexAttribArray(0);
     glutSwapBuffers();
 }
 
