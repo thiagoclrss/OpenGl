@@ -43,35 +43,49 @@ void generateTubeMesh(
     for (int i = 0; i <= segments; ++i) {
         float t = (float)i / segments;
         glm::vec3 point = bezierPoint(t, p0, p1, p2, p3);
-        glm::vec3 tangent = glm::normalize(bezierPoint(t + 0.01, p0, p1, p2, p3) - point);
 
-        glm::vec3 normal = glm::vec3(0, 1, 0);
+        // Calcula a tangente de forma mais estável para o último ponto
+        glm::vec3 tangent;
+        if (t > 1.0f - 0.01f) {
+            tangent = glm::normalize(point - bezierPoint(t - 0.01f, p0, p1, p2, p3));
+        } else {
+            tangent = glm::normalize(bezierPoint(t + 0.01f, p0, p1, p2, p3) - point);
+        }
+
+        glm::vec3 normal = glm::vec3(0.0f, 1.0f, 0.0f);
         if (fabs(glm::dot(tangent, normal)) > 0.99f)
-            normal = glm::vec3(1, 0, 0);
+            normal = glm::vec3(1.0f, 0.0f, 0.0f);
 
         glm::vec3 bitangent = glm::normalize(glm::cross(tangent, normal));
         normal = glm::normalize(glm::cross(bitangent, tangent));
 
         for (int j = 0; j < radialSegments; ++j) {
             float theta = 2.0f * glm::pi<float>() * float(j) / radialSegments;
-            glm::vec3 circlePoint = point + radius * (cos(theta) * normal + sin(theta) * bitangent);
+
+            // CORREÇÃO: Use cosf() e sinf() para operar com floats.
+            glm::vec3 circlePoint = point + radius * (cosf(theta) * normal + sinf(theta) * bitangent);
             vertices.push_back(circlePoint);
         }
     }
 
     for (int i = 0; i < segments; ++i) {
         for (int j = 0; j < radialSegments; ++j) {
-            int curr = i * radialSegments + j;
-            int next = curr + radialSegments;
             int nextJ = (j + 1) % radialSegments;
 
-            indices.push_back(curr);
-            indices.push_back(next);
-            indices.push_back(i * radialSegments + nextJ);
+            int topLeft = i * radialSegments + j;
+            int topRight = i * radialSegments + nextJ;
+            int bottomLeft = (i + 1) * radialSegments + j;
+            int bottomRight = (i + 1) * radialSegments + nextJ;
 
-            indices.push_back(next);
-            indices.push_back(next + nextJ - j);
-            indices.push_back(i * radialSegments + nextJ);
+            // Primeiro triângulo
+            indices.push_back(topLeft);
+            indices.push_back(bottomLeft);
+            indices.push_back(topRight);
+
+            // Segundo triângulo (Lógica de índice mais clara)
+            indices.push_back(topRight);
+            indices.push_back(bottomLeft);
+            indices.push_back(bottomRight);
         }
     }
 }
